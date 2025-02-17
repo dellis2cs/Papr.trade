@@ -33,9 +33,11 @@ export default function Landing() {
                     Login
                   </Button>
               </Link>
-              <Button variant="ghost" className="hover:text-white hover:scale-105 transition-all duration-150 hover:bg-[#526fff]  border border-neutral-700 bg-[#526fff] text-black">
-                SignUp
-              </Button>
+              <Link to="/Signup">
+                  <Button variant="ghost" className="hover:text-white hover:scale-105 transition-all duration-150 hover:bg-[#526fff]  border border-neutral-700 bg-[#526fff] text-black">
+                    SignUp
+                  </Button>
+              </Link>
             </motion.div>
           </nav>
         </header>

@@ -53,11 +53,11 @@ export default function Dashboard() {
       <header className="sticky top-0 bg-[#030307] bg-opacity-90 backdrop-blur-sm border-b border-white/10 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           {/* Left Side: Brand and Tabs */}
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-12">
             <Link to="/">
               <div className="text-xl font-medium">Papr</div>
             </Link>
-            <nav className="flex gap-4">
+            <nav className="flex gap-10">
               <p>Trade</p>
               <p>Portfolio</p>
             </nav>
@@ -68,9 +68,9 @@ export default function Dashboard() {
             <div className="flex items-center gap-1">
               {/* Replace with your Solana icon */}
               <img src="/sol.png" alt="SOL" className="w-3 h-3" />
-              <span className="text-sm font-semibold">{balance.toFixed(2)} SOL</span>
+              <span className="text-sm ">{balance.toFixed(4)} SOL</span>
             </div>
-            <Button onClick={handleOpenDepositModal} className="bg-[#526fff] text-black rounded-2xl">
+            <Button onClick={handleOpenDepositModal} className="bg-[#526fff] text-black rounded-2xl h-7 w-17">
               Deposit
             </Button>
           </div>
