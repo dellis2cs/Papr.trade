@@ -74,6 +74,7 @@ const depositFunds = async (req, res) => {
     const { data, error: updateError } = await supabase
       .from("port")
       .update({ balance: new_balance })
+      .select("*") // <-- This returns the updated row
       .eq("user_id", user_id)
       .single();
 
@@ -138,8 +139,10 @@ const executeTrade = async (req, res) => {
       const { data: updatedPort, error: portUpdateError } = await supabase
         .from("port")
         .update({ balance: newPortBalance })
+        .select("*")
         .eq("user_id", user_id)
         .single();
+
       if (portUpdateError) {
         return res.status(500).json({ error: "Error updating port balance" });
       }
@@ -161,11 +164,9 @@ const executeTrade = async (req, res) => {
           .single();
         if (insertError) {
           // Return the actual error message for debugging
-          return res
-            .status(500)
-            .json({
-              error: insertError.message || "Error inserting new position",
-            });
+          return res.status(500).json({
+            error: insertError.message || "Error inserting new position",
+          });
         }
       } else {
         // Update the existing position with the new quantity
