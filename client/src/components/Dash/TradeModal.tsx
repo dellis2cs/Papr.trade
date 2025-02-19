@@ -87,7 +87,7 @@ const TradeModal: React.FC<TradeModalProps> = React.memo(
                 <Button
                   key={percent}
                   onClick={() => handleTrade(percent)}
-                  disabled={coinBalance <= 0}
+
                   className="bg-red-500 text-black hover:bg-red-600 transition-colors disabled:opacity-50"
                 >
                   {percent * 100}%

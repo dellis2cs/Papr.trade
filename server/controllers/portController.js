@@ -201,7 +201,7 @@ const executeTrade = async (req, res) => {
       // Retrieve the user's current position for the coin
       const { data: positionData, error: positionError } = await supabase
         .from("positions")
-        .select("quantity")
+        .select("quantity, entry")
         .eq("user_id", user_id)
         .eq("coin", coin)
         .single();
@@ -210,16 +210,31 @@ const executeTrade = async (req, res) => {
           .status(400)
           .json({ error: "No position found for this coin" });
       }
-      if (Number(positionData.quantity) < quantity) {
+
+      // Determine sell quantity.
+      // If the provided quantity is ≤1, treat it as a percentage of the current quantity.
+      let sellQuantity;
+      if (quantity <= 1) {
+        sellQuantity = Number(positionData.quantity) * quantity;
+      } else {
+        sellQuantity = quantity;
+      }
+
+      if (Number(positionData.quantity) < sellQuantity) {
         return res
           .status(400)
           .json({ error: "Insufficient coin quantity to execute sell trade" });
       }
 
-      // Update the coin position
-      const newQuantity = Number(positionData.quantity) - quantity;
-      if (newQuantity === 0) {
-        // Remove the position if the quantity becomes zero
+      // Calculate trade profit/loss for this sell trade.
+      // (Current market cap - entry price) * sellQuantity.
+      const entryPrice = Number(positionData.entry);
+      const tradeProfit = (mk - entryPrice) * sellQuantity;
+
+      // Update the coin position.
+      const newQuantity = Number(positionData.quantity) - sellQuantity;
+      if (newQuantity <= 0.000001) {
+        // If nearly zero, delete the position.
         const { error: deleteError } = await supabase
           .from("positions")
           .delete()
@@ -229,7 +244,6 @@ const executeTrade = async (req, res) => {
           return res.status(500).json({ error: "Error deleting position" });
         }
       } else {
-        // Otherwise, update the position with the reduced quantity
         const { data: updatedPosition, error: updateError } = await supabase
           .from("positions")
           .update({ quantity: newQuantity })
@@ -241,20 +255,29 @@ const executeTrade = async (req, res) => {
         }
       }
 
-      // Add the sale proceeds to the port balance
-      const newPortBalance = portData.balance + totalValue;
+      // Calculate sale proceeds (using the price and the actual quantity sold).
+      const saleProceeds = sellQuantity * price;
+      const newPortBalance = portData.balance + saleProceeds;
+
+      // Update the port's PL (Profit/Loss). Assume portData.pl is null or a number.
+      const currentPL = portData.pl ? Number(portData.pl) : 0;
+      const newPL = currentPL + tradeProfit;
+
       const { data: updatedPort, error: portUpdateError } = await supabase
         .from("port")
-        .update({ balance: newPortBalance })
+        .update({ balance: newPortBalance, PL: newPL })
+        .select("*")
         .eq("user_id", user_id)
         .single();
       if (portUpdateError) {
+        console.log(portUpdateError);
         return res.status(500).json({ error: "Error updating port balance" });
       }
 
       return res.status(200).json({
         message: "Sell trade executed successfully",
         updatedPort,
+        tradeProfit, // Optionally, include the profit/loss for this trade
       });
     } else {
       return res.status(400).json({ error: "Invalid trade type" });
