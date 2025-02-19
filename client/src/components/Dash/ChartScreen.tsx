@@ -61,7 +61,7 @@ export default function ChartScreen() {
           // Update the Solana balance from the updated port data.
           setCoinBalance(result.updatedPort.balance);
           alert(
-            `${tradeType === "buy" ? "Bought" : "Sold"} ${value} ${coinCA} successfully!`
+            `${tradeType === "buy" ? "Bought" : "Sold"} successfully!`
           );
         }
       } catch (err: any) {

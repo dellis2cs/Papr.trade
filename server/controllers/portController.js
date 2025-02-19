@@ -212,7 +212,7 @@ const executeTrade = async (req, res) => {
       }
 
       // Determine sell quantity.
-      // If the provided quantity is ≤1, treat it as a percentage of the current quantity.
+      // If the provided quantity is ≤ 1, treat it as a percentage of the current quantity.
       let sellQuantity;
       if (quantity <= 1) {
         sellQuantity = Number(positionData.quantity) * quantity;
@@ -226,10 +226,10 @@ const executeTrade = async (req, res) => {
           .json({ error: "Insufficient coin quantity to execute sell trade" });
       }
 
-      // Calculate trade profit/loss for this sell trade.
-      // (Current market cap - entry price) * sellQuantity.
+      // Calculate trade profit percentage for this sell trade.
+      // Using the stored entry price for the position.
       const entryPrice = Number(positionData.entry);
-      const tradeProfit = (mk - entryPrice) * sellQuantity;
+      const tradePercentageProfit = (mk / entryPrice - 1) * 100;
 
       // Update the coin position.
       const newQuantity = Number(positionData.quantity) - sellQuantity;
@@ -259,14 +259,12 @@ const executeTrade = async (req, res) => {
       const saleProceeds = sellQuantity * price;
       const newPortBalance = portData.balance + saleProceeds;
 
-      // Update the port's PL (Profit/Loss). Assume portData.pl is null or a number.
-      const currentPL = portData.pl ? Number(portData.pl) : 0;
-      const newPL = currentPL + tradeProfit;
-
+      // Update the port's PL with the trade percentage profit.
+      // (You could also recalc an overall PL based on remaining positions if desired.)
       const { data: updatedPort, error: portUpdateError } = await supabase
         .from("port")
-        .update({ balance: newPortBalance, PL: newPL })
-        .select("*")
+        .update({ balance: newPortBalance, PL: tradePercentageProfit })
+        .select("*") // Return the updated record
         .eq("user_id", user_id)
         .single();
       if (portUpdateError) {
@@ -277,7 +275,7 @@ const executeTrade = async (req, res) => {
       return res.status(200).json({
         message: "Sell trade executed successfully",
         updatedPort,
-        tradeProfit, // Optionally, include the profit/loss for this trade
+        tradePercentageProfit,
       });
     } else {
       return res.status(400).json({ error: "Invalid trade type" });
