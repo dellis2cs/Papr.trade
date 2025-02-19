@@ -101,12 +101,18 @@ const depositFunds = async (req, res) => {
  */
 const executeTrade = async (req, res) => {
   try {
-    const { user_id, coin, tradeType, quantity, price } = req.body;
-
+    const { user_id, mk, coin, tradeType, quantity, price } = req.body;
+    console.log("user_id", user_id);
+    console.log("mk", mk);
+    console.log("coin", coin);
+    console.log("tradeType", tradeType);
+    console.log("quantity", quantity);
+    console.log("price", price);
     // Validate required parameters
     if (
       !user_id ||
       !coin ||
+      !mk ||
       !tradeType ||
       typeof quantity !== "number" ||
       typeof price !== "number"
@@ -150,30 +156,35 @@ const executeTrade = async (req, res) => {
       // Update (or insert) the position for the coin
       const { data: positionData, error: positionError } = await supabase
         .from("positions")
-        .select("quantity")
+        .select("quantity, entry")
         .eq("user_id", user_id)
         .eq("coin", coin)
         .single();
 
-      // In your executeTrade function (backend):
       if (positionError || !positionData) {
         // No existing position – insert a new one.
         const { data: newPosition, error: insertError } = await supabase
           .from("positions")
-          .insert({ user_id, coin, quantity })
+          .insert({ user_id, coin, quantity, entry: mk })
           .single();
         if (insertError) {
-          // Return the actual error message for debugging
           return res.status(500).json({
             error: insertError.message || "Error inserting new position",
           });
         }
       } else {
-        // Update the existing position with the new quantity
-        const newQuantity = Number(positionData.quantity) + quantity;
+        // Existing position: Calculate weighted average entry.
+        // Use the current market cap as default if the stored entry is null.
+        const oldQuantity = Number(positionData.quantity);
+        const oldEntry =
+          positionData.entry !== null ? Number(positionData.entry) : mk;
+        const newQuantity = oldQuantity + quantity;
+        const newAverageEntry =
+          (oldEntry * oldQuantity + mk * quantity) / newQuantity;
+
         const { data: updatedPosition, error: updateError } = await supabase
           .from("positions")
-          .update({ quantity: newQuantity })
+          .update({ quantity: newQuantity, entry: newAverageEntry })
           .eq("user_id", user_id)
           .eq("coin", coin)
           .single();

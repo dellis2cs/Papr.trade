@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../ui/button";
 import { Link, useNavigate } from "react-router";
 import DepositModal from "../currency/Deposit";
+import { GalleryVerticalEnd } from "lucide-react";
 
 export default function Dashboard() {
   const [coinCA, setCoinCA] = useState("");
@@ -50,12 +51,16 @@ export default function Dashboard() {
       <header className="sticky top-0 bg-[#030307] bg-opacity-90 backdrop-blur-sm border-b border-white/10 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-12">
-            <Link to="/">
-              <div className="text-xl font-medium">Papr</div>
+            <Link to="/" className="flex gap-2 items-center">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#526fff] text-black">
+                <GalleryVerticalEnd className="size-4" />
+              </div>
+              <div className="text-xl bg-gradient-to-br from-white via-blue-100 to-blue-200 bg-clip-text text-transparent">Papr</div>
             </Link>
-            <nav className="flex gap-10">
-              <p>Trade</p>
-              <p>Portfolio</p>
+            <nav className="flex gap-5">
+              <button className="px-4 py-2 hover:bg-[#415de9] rounded-lg transition-all duration-300">Trade</button>
+              <button className="px-4 py-2 hover:bg-[#415de9] rounded-lg transition-all duration-300">Portfolio</button>
+
             </nav>
           </div>
           <div className="flex items-center gap-4">
